@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/bootstrap.min.css">
+  <link href='./css/fullcalendar.css' rel='stylesheet' />
+  <link href='./css/fullcalendar.print.css' rel='stylesheet' media='print' />
+  <script src="./js/jquery.min.js"></script>
+  <script src="./js/moment.min.js"></script>
+  <script src="./js/bootstrap.min.js"></script>
+  <script src="./js/angular.min.js"></script>
+  <script src="./js/fullcalendar.min.js"></script>
+  <script src="./js/calendar.js"></script>
+  <script src="./js/md5.min.js"></script>
+  <script src="./js/app.js"></script>
+</head>
+<body ng-app="app" ng-controller="controller">
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Event Manager</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav navbar-right">
+            <li ng-show="user != undefined"><a href="#" ng-click="logout();">Logout <span class="glyphicon glyphicon-log-out"></span></a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container" ng-show="loginScreen">
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+          <div class="panel panel-login">
+            <div class="panel-heading">
+              <div class="row">
+                <div class="col-xs-6">
+                  <a href="#" ng-click="loginPanel();" class="active" id="login-form-link">Login</a>
+                </div>
+                <div class="col-xs-6">
+                  <a href="#" ng-click="registerPanel();" id="register-form-link">Register</a>
+                </div>
+              </div>
+              <hr>
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <div id="login-form" style="display: block;">
+                    <div class="form-group">
+                      <input type="text" name="username" id="username" tabindex="1" class="form-control" 
+                            ng-model="loginUser.username" placeholder="Username" value="">
+                    </div>
+                    <div class="form-group">
+                      <input type="password" name="password" id="password" tabindex="2" class="form-control" 
+                            ng-model="loginUser.password" placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                      <div class="row">
+                        <div class="col-sm-4 col-sm-offset-4">
+                          <input type="submit" name="login-submit" id="login-submit" tabindex="3" class="form-control btn btn-primary" ng-click="loginUserMethod();" value="Log In">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="register-form" style="display: none;">
+                    <div class="form-group">
+                      <input type="text" name="firstName" id="firstName" tabindex="1" class="form-control" 
+                            placeholder="First Name" ng-model="registerUser.firstName">
+                    </div>
+                    <div class="form-group">
+                      <input type="text" name="lastName" id="lastName" tabindex="2" class="form-control" 
+                            placeholder="Last Name" ng-model="registerUser.lastName">
+                    </div>
+                    <div class="form-group">
+                      <input type="text" name="username" id="username" tabindex="3" class="form-control" 
+                            placeholder="Username" ng-model="registerUser.username">
+                    </div>
+                    <div class="form-group">
+                      <input type="password" name="password" id="password" tabindex="4" class="form-control" 
+                            placeholder="Password" ng-model="registerUser.password">
+                    </div>
+                    <div class="form-group">
+                      <div class="row">
+                        <div class="col-sm-4 col-sm-offset-4">
+                          <input type="submit" name="register-submit" id="register-submit" tabindex="5" class="form-control btn btn-primary" ng-click="registerUserMethod();" value="Register Now">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" ng-show="eventsScreen">
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1" style="height:100%;">
+          <div ui-calendar="uiConfig.calendar" class="span8 calendar" ng-model="events"></div>
+        </div>
+      </div>
+    </div>
+    <div id="EventModal" class="modal fade ng-scope" role="dialog">
+      <div class="modal-dialog">
+
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">{{modalHeader}}</h4>
+          </div>
+          <div class="modal-body">
+            <div id="event-form" style="display: block;">
+              <div class="form-group">
+                <input type="text" name="title" id="title" tabindex="1" class="form-control" 
+                      placeholder="Title" ng-model="modalEvent.title">
+              </div>
+              <div class="form-group">
+                <input type="text" name="description" id="description" tabindex="2" class="form-control" 
+                      placeholder="Description" ng-model="modalEvent.description">
+              </div>
+              <div class="input-group">
+                <input type="date" class="form-control" ng-model="modalEvent.date" 
+                ng-required="true" placeholder="Date" 
+                tabindex="3" />
+              </div>
+              <div class="form-group">
+                <label class="control-label">Start: </label>
+                <input type="time" class="form-control" ng-model="modalEvent.start" 
+                ng-required="true" placeholder="Start time" 
+                tabindex="4" /> 
+              </div>
+              <div class="form-group">
+                <label class="control-label">End: </label>
+                <input type="time" class="form-control" ng-model="modalEvent.end" 
+                ng-required="true" placeholder="End time" 
+                tabindex="5" />
+              </div>
+              <div class="form-group">
+                <div class="row">
+                  <div class="col-sm-4 col-sm-offset-4">
+                    <input type="submit" name="event-submit" tabindex="6" class="form-control btn btn-primary" ng-click="(modalButton == 'Update') ? updateEvent() : saveEventMethod();" value="{{modalButton}}">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="footer container-fluid text-center">
+      <p>Footer Text</p>
+    </footer>
+</body>
+</html>
+
