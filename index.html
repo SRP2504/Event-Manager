@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Bootstrap Example</title>
+  <title>Event Manager</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="./css/style.css">
@@ -9,7 +9,7 @@
   <link href='./css/fullcalendar.css' rel='stylesheet' />
   <link href='./css/fullcalendar.print.css' rel='stylesheet' media='print' />
   <script src="./js/jquery.min.js"></script>
-  <script src="./js/moment.min.js"></script>
+  <script src="./js/moment.js"></script>
   <script src="./js/bootstrap.min.js"></script>
   <script src="./js/angular.min.js"></script>
   <script src="./js/fullcalendar.min.js"></script>
@@ -30,6 +30,7 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
           <ul class="nav navbar-nav navbar-right">
+            <li ng-show="user != undefined"><a style="cursor: default; color:white;">{{user.firstName}} <span class="glyphicon glyphicon-user"></span></a></li>
             <li ng-show="user != undefined"><a href="#" ng-click="logout();">Logout <span class="glyphicon glyphicon-log-out"></span></a></li>
           </ul>
         </div>
@@ -106,14 +107,16 @@
 
     <div class="container" ng-show="eventsScreen">
       <div class="row">
-        <div class="col-md-10 col-md-offset-1" style="height:100%;">
-          <div ui-calendar="uiConfig.calendar" class="span8 calendar" ng-model="events"></div>
+        <div class="col-md-10 col-md-offset-1">
+          <button class="btn btn-primary" ng-click="showEventModal();">Add Event&nbsp;
+            <span class="glyphicon glyphicon-plus"></span></button>
+          <br><br>
+          <div ui-calendar="uiConfig.calendar" class="span8 calengdar" ng-model="events"></div>
         </div>
       </div>
     </div>
     <div id="EventModal" class="modal fade ng-scope" role="dialog">
       <div class="modal-dialog">
-
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -126,42 +129,67 @@
                       placeholder="Title" ng-model="modalEvent.title">
               </div>
               <div class="form-group">
-                <input type="text" name="description" id="description" tabindex="2" class="form-control" 
-                      placeholder="Description" ng-model="modalEvent.description">
-              </div>
-              <div class="input-group">
-                <input type="date" class="form-control" ng-model="modalEvent.date" 
-                ng-required="true" placeholder="Date" 
-                tabindex="3" />
-              </div>
-              <div class="form-group">
                 <label class="control-label">Start: </label>
-                <input type="time" class="form-control" ng-model="modalEvent.start" 
+                <input type="date" class="form-control" ng-model="modalEvent.startDate" 
+                ng-required="true" placeholder="Start date" 
+                tabindex="2" />
+                <input type="time" class="form-control" ng-model="modalEvent.startTime" 
                 ng-required="true" placeholder="Start time" 
-                tabindex="4" /> 
+                tabindex="3" /> 
               </div>
               <div class="form-group">
                 <label class="control-label">End: </label>
-                <input type="time" class="form-control" ng-model="modalEvent.end" 
+                <input type="date" class="form-control" ng-model="modalEvent.endDate" 
                 ng-required="true" placeholder="End time" 
-                tabindex="5" />
+                tabindex="4" />
+                <input type="time" class="form-control" ng-model="modalEvent.endTime" 
+                ng-required="true" placeholder="End time" 
+                tabindex="5" /> 
               </div>
               <div class="form-group">
                 <div class="row">
                   <div class="col-sm-4 col-sm-offset-4">
-                    <input type="submit" name="event-submit" tabindex="6" class="form-control btn btn-primary" ng-click="(modalButton == 'Update') ? updateEvent() : saveEventMethod();" value="{{modalButton}}">
+                    <input type="submit" name="event-submit" tabindex="6" class="form-group btn btn-primary" 
+                      ng-click="(modalButton == 'Update') ? updateEventMethod() : saveEventMethod();" 
+                      value="{{modalButton}}">
+                    <input type="submit" ng-show="modalButton == 'Update'" name="event-delete" tabindex="7" 
+                      class="form-group btn btn-danger" ng-click="deleteEventMethod();" value="Delete">
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
+    <div class="container" ng-show="adminScreen">
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1" style="height:100%;">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>View Calendar Events</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="user in users">
+                <td>{{user.username}}</td>
+                <td>{{user.firstName}}</td>
+                <td>{{user.lastName}}</td>
+                <td><a href="#">View</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <footer class="footer container-fluid text-center">
-      <p>Footer Text</p>
+      <p>Event Manager © 2016</p>
     </footer>
 </body>
 </html>

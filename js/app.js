@@ -1,7 +1,7 @@
 var ADMIN_NAME = "admin";
 var ADMIN_PASS = "hello";
 var app = angular.module('app', ['ui.calendar']);
-app.controller('controller', ['$scope', function ($scope) {
+app.controller('controller', ['$scope', '$compile', function ($scope, $compile) {
 	$scope.user = JSON.parse (localStorage.getItem("user"));
 	$scope.loginScreen = ($scope.user == undefined);
 	$scope.eventsScreen = (($scope.user != undefined) && ($scope.user.username != ADMIN_NAME));
@@ -10,7 +10,7 @@ app.controller('controller', ['$scope', function ($scope) {
 	$scope.loginUser = {username: "", password: ""};
 	$scope.registerUser = {firstName: "", lastName: "", username: "", password: ""};
 	
-	$scope.modalEvent = {id: "", title: "", description: "", date: "", start: "", end: ""};
+	$scope.modalEvent = {id: "", title: "", start: "", end: ""};
 
 	$scope.events = [];
 	$scope.users = [];
@@ -91,7 +91,7 @@ app.controller('controller', ['$scope', function ($scope) {
 		$scope.loginUser = {username: "", password: ""};
 		$scope.registerUser = {firstName: "", lastName: "", username: "", password: ""};
 		
-		$scope.modalEvent = {name: "", description: "", date: "", start: "", end: ""};
+		$scope.modalEvent = {id: "", title: "", start: "", end: ""};
 		
 		$scope.events = [];
 		$scope.users = [];
@@ -118,8 +118,31 @@ app.controller('controller', ['$scope', function ($scope) {
 		loadUsers ();
 	}
 
-	function increaseEventId() {
+	function increaseEventId () {
 		localStorage.setItem("eventId", parseInt(localStorage.getItem("eventId"))+1);
+	}
+
+	function setStartAndEnd () {
+		$scope.modalEvent.start = $scope.modalEvent.startDate.toLocaleDateString();
+		if ($scope.modalEvent.startTime == undefined && $scope.modalEvent.endDate == undefined) {
+			$scope.modalEvent.allDay = true;
+		} else if ($scope.modalEvent.startTime != undefined) {
+			$scope.modalEvent.start += " " + $scope.modalEvent.startTime.getHours()
+									+ ":" + $scope.modalEvent.startTime.getMinutes();
+			$scope.modalEvent.allDay = false;
+		}
+
+		if ($scope.modalEvent.endDate != undefined) {
+			if ($scope.modalEvent.startTime == undefined) {
+				$scope.modalEvent.start += " 00:00";
+			}
+			$scope.modalEvent.allDay = false;
+			$scope.modalEvent.end = $scope.modalEvent.endDate.toLocaleDateString();
+			if ($scope.modalEvent.endTime != undefined) {
+				$scope.modalEvent.end += " " + $scope.modalEvent.endTime.getHours()
+									+ ":" + $scope.modalEvent.endTime.getMinutes();
+			}
+		}
 	}
 
 	$scope.saveEventMethod = function () {
@@ -127,35 +150,77 @@ app.controller('controller', ['$scope', function ($scope) {
 		if (events[$scope.user.username] == undefined) {
 			events[$scope.user.username] = [];
 		}
-		if ($scope.modalEvent.start != undefined) {
-			$scope.modalEvent.start = $scope.modalEvent.start.toLocaleTimeString();
-		}
-		if ($scope.modalEvent.end != undefined) {
-			$scope.modalEvent.start = $scope.modalEvent.start.toLocaleTimeString();
-		}
-		return;
+		setStartAndEnd ();
 		$scope.modalEvent.id = localStorage.getItem("eventId");
 		increaseEventId();
 		events[$scope.user.username].push ($scope.modalEvent);
 		localStorage.setItem("events", JSON.stringify(events));
-		$scope.modalEvent = {id: "", title: "", description: "", date: "", start: "", end: ""};
+		$scope.modalEvent = {id: "", title: "", start: "", end: ""};
 		loadEvents($scope.user.username);
 		$("#EventModal").modal("hide");
+		location.reload();
 	}
 
-	function eventsCompare(a, b) {
-	  	if (a.date < b.date)
-	    	return -1;
-	  	if (a.date > b.date)
-	    	return 1;
-	  	return 0;
+	$scope.updateEventMethod = function () {
+		var events = JSON.parse (localStorage.getItem("events"));
+		if (events[$scope.user.username] == undefined) {
+			events[$scope.user.username] = [];
+		}
+		var userEvents = events[$scope.user.username];
+		setStartAndEnd ();
+		var i = 0;
+		for (i = 0; i < userEvents.length; i++) {
+			if (userEvents[i].id == $scope.modalEvent.id) {
+				break;
+			}
+		}
+		if (i < userEvents.length) {
+			userEvents[i].title = $scope.modalEvent.title;
+			userEvents[i].start = $scope.modalEvent.start;
+			userEvents[i].end = $scope.modalEvent.end;
+			userEvents[i].startTime = $scope.modalEvent.startTime;
+			userEvents[i].startDate = $scope.modalEvent.startDate;
+			userEvents[i].endTime = $scope.modalEvent.endTime;
+			userEvents[i].endDate = $scope.modalEvent.endDate;
+			userEvents[i].allDay = $scope.modalEvent.allDay;
+		} else {
+			/* Boom */
+		}
+		events[$scope.user.username] = userEvents;
+		localStorage.setItem("events", JSON.stringify(events));
+		$scope.modalEvent = {id: "", title: "", start: "", end: ""};
+		loadEvents($scope.user.username);
+		$("#EventModal").modal("hide");
+		location.reload();
+	}
+
+	$scope.deleteEventMethod = function () {
+		var events = JSON.parse (localStorage.getItem("events"));
+		if (events[$scope.user.username] == undefined) {
+			events[$scope.user.username] = [];
+		}
+		var userEvents = events[$scope.user.username];
+		var i = 0;
+		for (i = 0; i < userEvents.length; i++) {
+			if (userEvents[i].id == $scope.modalEvent.id) {
+				break;
+			}
+		}
+		if (i < userEvents.length) {
+			userEvents.splice(i, 1);
+		} else {
+			/* Boom */
+		}
+		events[$scope.user.username] = userEvents;
+		localStorage.setItem("events", JSON.stringify(events));
+		$scope.modalEvent = {id: "", title: "", start: "", end: ""};
+		loadEvents($scope.user.username);
+		$("#EventModal").modal("hide");
+		location.reload();
 	}
 	
 	function loadEvents (username) {
-		$scope.events = (JSON.parse (localStorage.getItem("events")))[username];
-		if ($scope.events != undefined && $scope.events.length > 0) {
-			$scope.events.sort (eventsCompare);
-		}
+		$scope.events = [(JSON.parse (localStorage.getItem("events")))[username]];
 	}
 
   	$scope.showEventModal = function () {
@@ -164,12 +229,19 @@ app.controller('controller', ['$scope', function ($scope) {
   		$("#EventModal").modal();
   	}
 
-  	$scope.open = function() {
-    	$scope.popup.opened = true;
-  	};
-
-    $scope.alertOnEventClick = function( date, jsEvent, view){
-        $scope.alertMessage = (date.title + ' was clicked ');
+    $scope.alertOnEventClick = function( event, jsEvent, view){
+    	$scope.modalEvent = event;
+    	$scope.modalEvent.startDate = new Date ($scope.modalEvent.startDate);
+    	if ($scope.modalEvent.startTime != undefined)
+    		$scope.modalEvent.startTime = new Date ($scope.modalEvent.startTime);
+    	if ($scope.modalEvent.endDate != undefined)
+    		$scope.modalEvent.endDate = new Date ($scope.modalEvent.endDate);
+    	if ($scope.modalEvent.endTime != undefined)
+    		$scope.modalEvent.endTime = new Date ($scope.modalEvent.endTime);
+    	
+    	$scope.modalHeader = "Update Event";
+  		$scope.modalButton = "Update";
+    	$("#EventModal").modal("show");
     };
      $scope.alertOnDrop = function(event, delta, revertFunc, jsEvent, ui, view){
        $scope.alertMessage = ('Event Droped to make dayDelta ' + delta);
@@ -184,9 +256,9 @@ app.controller('controller', ['$scope', function ($scope) {
     };
   	$scope.uiConfig = {
 		calendar:{
-			height: 550,
+			height: 500,
 			editable: true,
-			eventLimit: true,
+			eventLimit: 4,
 			header:{
 		  		left: 'prev,next,today',
 		  		center: 'title',
