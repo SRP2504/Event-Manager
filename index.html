@@ -9,11 +9,11 @@
   <link href='./css/fullcalendar.css' rel='stylesheet' />
   <link href='./css/fullcalendar.print.css' rel='stylesheet' media='print' />
   <script src="./js/jquery.min.js"></script>
-  <script src="./js/moment.js"></script>
+  <script src="./js/moment.min.js"></script>
   <script src="./js/bootstrap.min.js"></script>
   <script src="./js/angular.min.js"></script>
   <script src="./js/fullcalendar.min.js"></script>
-  <script src="./js/calendar.js"></script>
+  <script src="./js/calendar.min.js"></script>
   <script src="./js/md5.min.js"></script>
   <script src="./js/app.js"></script>
 </head>
@@ -56,6 +56,11 @@
               <div class="row">
                 <div class="col-lg-12">
                   <div id="login-form" style="display: block;">
+                    <div class="alert alert-danger" id="failed-login">
+                      <button type="button" class="close" data-dismiss="alert">x</button>
+                      <strong>Error! </strong>
+                      Username or password is incorrect.
+                    </div>
                     <div class="form-group">
                       <input type="text" name="username" id="username" tabindex="1" class="form-control" 
                             ng-model="loginUser.username" placeholder="Username" value="">
@@ -73,9 +78,17 @@
                     </div>
                   </div>
                   <div id="register-form" style="display: none;">
+                    <div class="alert alert-success" id="success-registration">
+                      <button type="button" class="close" data-dismiss="alert">x</button>
+                      <strong>Success! </strong>
+                      You're successfully registered.
+                    </div>
                     <div class="form-group">
                       <input type="text" name="firstName" id="firstName" tabindex="1" class="form-control" 
                             placeholder="First Name" ng-model="registerUser.firstName">
+                      <div class="help-inline">
+                        <span style="color:red;" ng-show="isBlankCheck(registerUser.firstName);">&nbsp;First Name Required.</span>
+                      </div>
                     </div>
                     <div class="form-group">
                       <input type="text" name="lastName" id="lastName" tabindex="2" class="form-control" 
@@ -84,15 +97,25 @@
                     <div class="form-group">
                       <input type="text" name="username" id="username" tabindex="3" class="form-control" 
                             placeholder="Username" ng-model="registerUser.username">
+                      <div class="help-inline">
+                        <span style="color:red;" ng-show="isBlankCheck(registerUser.username);">&nbsp;Username Required.</span>
+                        <span style="color:red;" ng-show="invalidCharsUsername(registerUser.username);">Username must contain alphanumerics only.</span>
+                        <span style="color:red;" ng-show="invalidLenCheck(registerUser.username, 3, 20);">Username must be 3-20 characters.</span>
+                      </div>
                     </div>
                     <div class="form-group">
                       <input type="password" name="password" id="password" tabindex="4" class="form-control" 
                             placeholder="Password" ng-model="registerUser.password">
+                      <div class="help-inline">
+                        <span style="color:red;" ng-show="isBlankCheck(registerUser.password);">&nbsp;Password Required.</span>
+                        <span style="color:red;" ng-show="invalidLenCheck(registerUser.password, 5, 20);">Password must be 5-20 characters.</span>
+                      </div>
                     </div>
                     <div class="form-group">
                       <div class="row">
                         <div class="col-sm-4 col-sm-offset-4">
-                          <input type="submit" name="register-submit" id="register-submit" tabindex="5" class="form-control btn btn-primary" ng-click="registerUserMethod();" value="Register Now">
+                          <input type="submit" name="register-submit" id="register-submit" tabindex="5" class="form-control btn btn-primary" ng-click="registerUserMethod();" 
+                          ng-disabled="registrationFormCheck();" value="Register Now">
                         </div>
                       </div>
                     </div>
@@ -110,7 +133,8 @@
         <div class="col-md-10 col-md-offset-1">
           <button class="btn btn-primary" ng-click="showEventModal();">Add Event&nbsp;
             <span class="glyphicon glyphicon-plus"></span></button>
-          <br><br>
+          <br>
+          <br>
           <div ui-calendar="uiConfig.calendar" class="span8 calengdar" ng-model="events"></div>
         </div>
       </div>
@@ -127,18 +151,27 @@
               <div class="form-group">
                 <input type="text" name="title" id="title" tabindex="1" class="form-control" 
                       placeholder="Title" ng-model="modalEvent.title">
+                <div class="help-inline">
+                  <span style="color:red;" ng-show="isBlankCheck(modalEvent.title);">&nbsp;Title Required.</span>
+                </div>
               </div>
+              <hr>
               <div class="form-group">
-                <label class="control-label">Start: </label>
+                <label class="control-label">Start Date and Time: </label>
                 <input type="date" class="form-control" ng-model="modalEvent.startDate" 
                 ng-required="true" placeholder="Start date" 
                 tabindex="2" />
+                <div class="help-inline">
+                  <span style="color:red;" ng-show="isUndefinedCheck(modalEvent.startDate);">&nbsp;Start Date Required.
+                  </span>
+                </div>
                 <input type="time" class="form-control" ng-model="modalEvent.startTime" 
                 ng-required="true" placeholder="Start time" 
                 tabindex="3" /> 
               </div>
+              <hr>
               <div class="form-group">
-                <label class="control-label">End: </label>
+                <label class="control-label">End Date and Time: </label>
                 <input type="date" class="form-control" ng-model="modalEvent.endDate" 
                 ng-required="true" placeholder="End time" 
                 tabindex="4" />
@@ -149,11 +182,12 @@
               <div class="form-group">
                 <div class="row">
                   <div class="col-sm-4 col-sm-offset-4">
-                    <input type="submit" name="event-submit" tabindex="6" class="form-group btn btn-primary" 
+                    <input type="submit" name="event-submit" tabindex="6" class="form-control btn btn-primary" 
                       ng-click="(modalButton == 'Update') ? updateEventMethod() : saveEventMethod();" 
-                      value="{{modalButton}}">
+                      value="{{modalButton}}" ng-disabled="eventModalCheck();">
                     <input type="submit" ng-show="modalButton == 'Update'" name="event-delete" tabindex="7" 
-                      class="form-group btn btn-danger" ng-click="deleteEventMethod();" value="Delete">
+                      class="form-control btn btn-danger" ng-click="deleteEventMethod();"
+                      ng-disabled="eventModalCheck();" value="Delete">
                   </div>
                 </div>
               </div>
@@ -172,7 +206,7 @@
                 <th>Username</th>
                 <th>First Name</th>
                 <th>Last Name</th>
-                <th>View Calendar Events</th>
+                <th>View Events</th>
               </tr>
             </thead>
             <tbody>
@@ -180,10 +214,26 @@
                 <td>{{user.username}}</td>
                 <td>{{user.firstName}}</td>
                 <td>{{user.lastName}}</td>
-                <td><a href="#">View</a></td>
+                <td><a href="#" ng-click="showCalendar (user);" ng-hide="user.username == 'admin'">
+                  <span class="glyphicon glyphicon-calendar" style="font-size: 1.7em;"></span></a>
+                </td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" ng-show="beingWatchedUserScreen">
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+          <a ng-click="goBackToUsers ()" style="cursor:pointer;">Go Back To Users</a>
+          <br>
+          <span style="font-size: 1.5em;"><b>{{beingWatchedUser.firstName}}'s Calendar</b></span>
+          <br><br>
+          <div id="viewOnlyCalendar" ui-calendar="uiConfigViewOnly.calendar" class="span8 calengdar" 
+            ng-model="events">
+          </div>
         </div>
       </div>
     </div>

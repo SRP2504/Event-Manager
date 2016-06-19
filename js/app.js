@@ -3,9 +3,12 @@ var ADMIN_PASS = "hello";
 var app = angular.module('app', ['ui.calendar']);
 app.controller('controller', ['$scope', '$compile', function ($scope, $compile) {
 	$scope.user = JSON.parse (localStorage.getItem("user"));
+	$scope.beingWatchedUser = JSON.parse (localStorage.getItem("BeingWatchedUser"));
 	$scope.loginScreen = ($scope.user == undefined);
 	$scope.eventsScreen = (($scope.user != undefined) && ($scope.user.username != ADMIN_NAME));
-	$scope.adminScreen = (($scope.user != undefined) && ($scope.user.username == ADMIN_NAME));
+	$scope.adminScreen = (($scope.user != undefined) && ($scope.user.username == ADMIN_NAME)
+							&& $scope.beingWatchedUser == undefined);
+	$scope.beingWatchedUserScreen = ($scope.beingWatchedUser != undefined);
 	
 	$scope.loginUser = {username: "", password: ""};
 	$scope.registerUser = {firstName: "", lastName: "", username: "", password: ""};
@@ -14,11 +17,15 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 
 	$scope.events = [];
 	$scope.users = [];
+
+	$("#success-registration").hide();
+	$("#failed-login").hide();
 	
 	function switchScreen () {
 		$scope.loginScreen = ($scope.user == undefined);
 		$scope.eventsScreen = (($scope.user != undefined) && ($scope.user.username != ADMIN_NAME));
 		$scope.adminScreen = (($scope.user != undefined) && ($scope.user.username == ADMIN_NAME));
+		$scope.beingWatchedUserScreen = ($scope.beingWatchedUser != undefined);
 	}
 	
 	function init () {
@@ -51,6 +58,11 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 		$scope.registerUser = {firstName: "", lastName: "", username: "", password: ""};
 
 		loadUsers();
+
+        $("#success-registration").alert();
+        $("#success-registration").fadeTo(2000, 500).slideUp(500, function(){
+        	$("#success-registration").alert('close');
+    	});
 	}
 	
 	$scope.loginUserMethod = function () {
@@ -64,7 +76,10 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 			}
 		}
 		if (user == undefined) {
-			/* Boom happened */
+			$("#failed-login").alert();
+	        $("#failed-login").fadeTo(2000, 500).slideUp(500, function(){
+	        	$("#failed-login").alert('close');
+	    	});
 		} else {
 			localStorage.setItem ("user", JSON.stringify(user));
 			$scope.user = user;
@@ -73,7 +88,7 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 			} else {
 				loadUsers ();
 			}
-			switchScreen ();
+			location.reload ();
 		}
 	}
 	
@@ -83,10 +98,11 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 	
 	$scope.logout = function () {
 		localStorage.removeItem ("user");
-		$scope.user = localStorage.getItem("user");
-		$scope.loginScreen = ($scope.user == undefined);
-		$scope.eventsScreen = (($scope.user != undefined) && ($scope.user.username != ADMIN_NAME));
-		$scope.adminScreen = (($scope.user != undefined) && ($scope.user.username == ADMIN_NAME));
+		localStorage.removeItem ("BeingWatchedUser");
+		$scope.user = undefined;
+		$scope.beingWatchedUser = undefined;
+
+		switchScreen ();
 		
 		$scope.loginUser = {username: "", password: ""};
 		$scope.registerUser = {firstName: "", lastName: "", username: "", password: ""};
@@ -95,6 +111,8 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 		
 		$scope.events = [];
 		$scope.users = [];
+
+		location.reload ();
 	}
 
 	$scope.loginPanel = function () {
@@ -111,13 +129,6 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 		$("#register-form-link").addClass('active');
 	}
 
-	if ($scope.eventsScreen) {
-		loadEvents ($scope.user.username);
-	}
-	if ($scope.adminScreen) {
-		loadUsers ();
-	}
-
 	function increaseEventId () {
 		localStorage.setItem("eventId", parseInt(localStorage.getItem("eventId"))+1);
 	}
@@ -126,6 +137,7 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 		$scope.modalEvent.start = $scope.modalEvent.startDate.toLocaleDateString();
 		if ($scope.modalEvent.startTime == undefined && $scope.modalEvent.endDate == undefined) {
 			$scope.modalEvent.allDay = true;
+			$scope.modalEvent.start = new Date ($scope.modalEvent.start);
 		} else if ($scope.modalEvent.startTime != undefined) {
 			$scope.modalEvent.start += " " + $scope.modalEvent.startTime.getHours()
 									+ ":" + $scope.modalEvent.startTime.getMinutes();
@@ -133,9 +145,6 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 		}
 
 		if ($scope.modalEvent.endDate != undefined) {
-			if ($scope.modalEvent.startTime == undefined) {
-				$scope.modalEvent.start += " 00:00";
-			}
 			$scope.modalEvent.allDay = false;
 			$scope.modalEvent.end = $scope.modalEvent.endDate.toLocaleDateString();
 			if ($scope.modalEvent.endTime != undefined) {
@@ -144,6 +153,10 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 			}
 		}
 	}
+
+	$("#EventModal").on('hidden.bs.modal', function () {
+		$scope.modalEvent = {id: "", title: "", start: "", end: ""};
+	});
 
 	$scope.saveEventMethod = function () {
 		var events = JSON.parse (localStorage.getItem("events"));
@@ -155,7 +168,6 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 		increaseEventId();
 		events[$scope.user.username].push ($scope.modalEvent);
 		localStorage.setItem("events", JSON.stringify(events));
-		$scope.modalEvent = {id: "", title: "", start: "", end: ""};
 		loadEvents($scope.user.username);
 		$("#EventModal").modal("hide");
 		location.reload();
@@ -188,7 +200,6 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 		}
 		events[$scope.user.username] = userEvents;
 		localStorage.setItem("events", JSON.stringify(events));
-		$scope.modalEvent = {id: "", title: "", start: "", end: ""};
 		loadEvents($scope.user.username);
 		$("#EventModal").modal("hide");
 		location.reload();
@@ -208,19 +219,18 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 		}
 		if (i < userEvents.length) {
 			userEvents.splice(i, 1);
-		} else {
-			/* Boom */
 		}
 		events[$scope.user.username] = userEvents;
 		localStorage.setItem("events", JSON.stringify(events));
-		$scope.modalEvent = {id: "", title: "", start: "", end: ""};
 		loadEvents($scope.user.username);
 		$("#EventModal").modal("hide");
 		location.reload();
 	}
 	
 	function loadEvents (username) {
-		$scope.events = [(JSON.parse (localStorage.getItem("events")))[username]];
+		if ((JSON.parse (localStorage.getItem("events")))[username] != undefined) {
+			$scope.events[0] = (JSON.parse (localStorage.getItem("events")))[username];
+		}
 	}
 
   	$scope.showEventModal = function () {
@@ -238,37 +248,90 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
     		$scope.modalEvent.endDate = new Date ($scope.modalEvent.endDate);
     	if ($scope.modalEvent.endTime != undefined)
     		$scope.modalEvent.endTime = new Date ($scope.modalEvent.endTime);
-    	
+
     	$scope.modalHeader = "Update Event";
   		$scope.modalButton = "Update";
     	$("#EventModal").modal("show");
     };
-     $scope.alertOnDrop = function(event, delta, revertFunc, jsEvent, ui, view){
-       $scope.alertMessage = ('Event Droped to make dayDelta ' + delta);
-    };
-    $scope.alertOnResize = function(event, delta, revertFunc, jsEvent, ui, view ){
-       $scope.alertMessage = ('Event Resized to make dayDelta ' + delta);
-    };
-    $scope.eventRender = function( event, element, view ) { 
-        element.attr({'tooltip': event.title,
-                     'tooltip-append-to-body': true});
-        $compile(element)($scope);
-    };
   	$scope.uiConfig = {
 		calendar:{
 			height: 500,
-			editable: true,
 			eventLimit: 4,
+			editable: true,
+			eventStartEditable: false,
+			eventDurationEditable: false,
+			ignoreTimezone: false, 
+			timezone: 'local',
 			header:{
 		  		left: 'prev,next,today',
 		  		center: 'title',
 		  		right: 'month,basicWeek,basicDay'
 			},
-			eventClick: $scope.alertOnEventClick,
-			eventDrop: $scope.alertOnDrop,
-			eventResize: $scope.alertOnResize,
-			eventRender: $scope.eventRender
+			eventClick: $scope.alertOnEventClick
+		}
+    };
+
+    $scope.uiConfigViewOnly = {
+		calendar:{
+			height: 500,
+			eventLimit: 4,
+			ignoreTimezone: false,
+			timezone: 'local',
+			header:{
+		  		left: 'prev,next,today',
+		  		center: 'title',
+		  		right: 'month,basicWeek,basicDay'
+			}
 		}
     };
 	
+	$scope.showCalendar = function (user) {
+		$scope.beingWatchedUser = user;
+		localStorage.setItem ("BeingWatchedUser", JSON.stringify($scope.beingWatchedUser));
+		location.reload ();
+	}
+
+	$scope.goBackToUsers = function () {
+		localStorage.removeItem ("BeingWatchedUser");
+		$scope.adminScreen = true;
+		$scope.beingWatchedUserScreen = false;
+		loadUsers ();
+	}
+
+	if ($scope.eventsScreen) {
+		loadEvents ($scope.user.username);
+	}
+	if ($scope.adminScreen) {
+		loadUsers ();
+	}
+	if ($scope.beingWatchedUserScreen) {
+		loadEvents ($scope.beingWatchedUser.username);
+	}
+
+	$scope.isBlankCheck = function (name) {
+		return (name == "");
+	}
+	$scope.invalidCharsUsername = function (name) {
+		return (!$scope.isBlankCheck(name) && !/^[A-z0-9]+$/.test(name));
+	}
+	$scope.invalidLenCheck = function (name, min, max) {
+		return (!$scope.isBlankCheck(name) && (name.length < min || name.length > max));
+	}
+	$scope.isUndefinedCheck = function (val) {
+		return (val == undefined);
+	}
+
+	$scope.registrationFormCheck = function () {
+		return ($scope.isBlankCheck ($scope.registerUser.username) ||
+				$scope.invalidCharsUsername ($scope.registerUser.username) ||
+				$scope.invalidLenCheck ($scope.registerUser.username, 3, 20) ||
+				$scope.isBlankCheck ($scope.registerUser.firstName) ||
+				$scope.isBlankCheck ($scope.registerUser.password) ||
+				$scope.invalidLenCheck ($scope.registerUser.password, 5, 20));
+	}
+
+	$scope.eventModalCheck = function () {
+		return ($scope.isBlankCheck ($scope.modalEvent.title) ||
+				$scope.isUndefinedCheck ($scope.modalEvent.startDate));
+	}
 }]);
