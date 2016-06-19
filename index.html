@@ -63,7 +63,7 @@
                     </div>
                     <div class="form-group">
                       <input type="text" name="username" id="username" tabindex="1" class="form-control" 
-                            ng-model="loginUser.username" placeholder="Username" value="">
+                            ng-model="loginUser.username" autofocus placeholder="Username" value="">
                     </div>
                     <div class="form-group">
                       <input type="password" name="password" id="password" tabindex="2" class="form-control" 
@@ -77,7 +77,7 @@
                       </div>
                     </div>
                   </div>
-                  <div id="register-form" style="display: none;">
+                  <form id="register-form" name="registerForm" style="display: none;">
                     <div class="alert alert-success" id="success-registration">
                       <button type="button" class="close" data-dismiss="alert">x</button>
                       <strong>Success! </strong>
@@ -85,7 +85,7 @@
                     </div>
                     <div class="form-group">
                       <input type="text" name="firstName" id="firstName" tabindex="1" class="form-control" 
-                            placeholder="First Name" ng-model="registerUser.firstName">
+                            placeholder="First Name" autofocus ng-model="registerUser.firstName">
                       <div class="help-inline">
                         <span style="color:red;" ng-show="isBlankCheck(registerUser.firstName);">&nbsp;First Name Required.</span>
                       </div>
@@ -97,7 +97,7 @@
                     <div class="form-group">
                       <input type="text" name="username" id="username" tabindex="3" class="form-control" 
                             placeholder="Username" ng-model="registerUser.username">
-                      <div class="help-inline">
+                      <div class="help-inline" ng-hide="registerForm.username.$pristine">
                         <span style="color:red;" ng-show="isBlankCheck(registerUser.username);">&nbsp;Username Required.</span>
                         <span style="color:red;" ng-show="invalidCharsUsername(registerUser.username);">Username must contain alphanumerics only.</span>
                         <span style="color:red;" ng-show="invalidLenCheck(registerUser.username, 3, 20);">Username must be 3-20 characters.</span>
@@ -106,7 +106,7 @@
                     <div class="form-group">
                       <input type="password" name="password" id="password" tabindex="4" class="form-control" 
                             placeholder="Password" ng-model="registerUser.password">
-                      <div class="help-inline">
+                      <div class="help-inline" ng-hide="registerForm.password.$pristine">
                         <span style="color:red;" ng-show="isBlankCheck(registerUser.password);">&nbsp;Password Required.</span>
                         <span style="color:red;" ng-show="invalidLenCheck(registerUser.password, 5, 20);">Password must be 5-20 characters.</span>
                       </div>
@@ -119,7 +119,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </form>
                 </div>
               </div>
             </div>
@@ -147,21 +147,21 @@
             <h4 class="modal-title">{{modalHeader}}</h4>
           </div>
           <div class="modal-body">
-            <div id="event-form" style="display: block;">
+            <form id="event-form" name="eventForm" style="display: block;">
               <div class="form-group">
                 <input type="text" name="title" id="title" tabindex="1" class="form-control" 
-                      placeholder="Title" ng-model="modalEvent.title">
-                <div class="help-inline">
+                      placeholder="Title" autofocus ng-model="modalEvent.title">
+                <div class="help-inline" ng-hide="eventForm.title.$pristine">
                   <span style="color:red;" ng-show="isBlankCheck(modalEvent.title);">&nbsp;Title Required.</span>
                 </div>
               </div>
               <hr>
               <div class="form-group">
                 <label class="control-label">Start Date and Time: </label>
-                <input type="date" class="form-control" ng-model="modalEvent.startDate" 
+                <input type="date" name="startDate" class="form-control" ng-model="modalEvent.startDate" 
                 ng-required="true" placeholder="Start date" 
                 tabindex="2" />
-                <div class="help-inline">
+                <div class="help-inline" ng-hide="eventForm.startDate.$pristine">
                   <span style="color:red;" ng-show="isUndefinedCheck(modalEvent.startDate);">&nbsp;Start Date Required.
                   </span>
                 </div>
@@ -191,7 +191,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>
