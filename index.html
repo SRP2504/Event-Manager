@@ -83,6 +83,11 @@
                       <strong>Success! </strong>
                       You're successfully registered.
                     </div>
+                    <div class="alert alert-danger" id="failed-registration">
+                      <button type="button" class="close" data-dismiss="alert">x</button>
+                      <strong>Error! </strong>
+                      Username is already taken.
+                    </div>
                     <div class="form-group">
                       <input type="text" name="firstName" id="firstName" tabindex="1" class="form-control" 
                             placeholder="First Name" autofocus ng-model="registerUser.firstName">

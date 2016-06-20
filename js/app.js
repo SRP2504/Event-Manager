@@ -19,6 +19,7 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 	$scope.users = [];
 
 	$("#success-registration").hide();
+	$("#failed-registration").hide();
 	$("#failed-login").hide();
 	
 	function switchScreen () {
@@ -51,6 +52,15 @@ app.controller('controller', ['$scope', '$compile', function ($scope, $compile) 
 	
 	$scope.registerUserMethod = function () {
 		var users = JSON.parse (localStorage.getItem("users"));
+		for (var i = 0; i < users.length; i++) {
+			if (users[i].username == $scope.registerUser.username) {
+				$("#failed-registration").alert();
+		        $("#failed-registration").fadeTo(2000, 500).slideUp(500, function(){
+		        	$("#failed-registration").alert('close');
+		    	});
+		    	return;
+			}
+		}
 		$scope.registerUser.password = md5($scope.registerUser.password);
 		users.push ($scope.registerUser);
 		localStorage.setItem("users", JSON.stringify(users));
